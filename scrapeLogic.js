@@ -1,6 +1,9 @@
 const puppeteer = require("puppeteer");
 require("dotenv").config();
 
+const targetURL = "https://www.bing.com/search?q=previs%C3%A3o+do+tempo+birigui";
+const divSelector = "body";
+
 const scrapeLogic = async (res) => {
   const browser = await puppeteer.launch({
     args: [
@@ -15,48 +18,37 @@ const scrapeLogic = async (res) => {
         : puppeteer.executablePath(),
   });
   try {
-    await page.setExtraHTTPHeaders({
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    const browser = await puppeteer.launch({
+      executablePath: chromium.path,
+      args: chromium.args,
+      headless: chromium.headless,
     });
 
-    await page.goto(URL_TO_CAPTURE, { waitUntil: 'networkidle0' });
+    const page = await browser.newPage();
+    await page.goto(targetURL, { waitUntil: "networkidle0" });
 
-    if (await page.$('#bnp_btn_accept > a') !== null) {
-      await page.waitForSelector('#bnp_btn_accept > a');
-      await page.waitForTimeout(1000);
-      await page.click('#bnp_btn_accept > a', { delay: 1500 });
-    }
+    await page.waitForSelector(divSelector);
 
-    const elemento = await page.$(DIV_SELECTOR);
-    const elementoExistente = elemento !== null;
+    const elementHandle = await page.$(divSelector);
+    const rect = await elementHandle.boundingBox();
+    const screenshotBuffer = await elementHandle.screenshot({
+      clip: {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      },
+    });
 
-    console.log(">> >>> >>>> EXECUTING API <<<< <<< << ... ");
+    // Encerrar o navegador após a captura do screenshot
+    await browser.close();
 
-    if (elementoExistente) {
-      await page.waitForSelector(DIV_SELECTOR);
-      const element = await page.$(DIV_SELECTOR);
-      const screenshotBuffer = await element.screenshot({ encoding: 'binary' });
-      return screenshotBuffer;
-    }
-
-    console.log(">> >>> >>>> ELEMENT NOT FOUND <<<< <<< << ...");
-    return null;
-
+    // Enviar o screenshot como resposta
+    res.setHeader("Content-Type", "image/png");
+    res.status(200).send(screenshotBuffer);
   } catch (error) {
-    console.error("Error:", error);
-    return null;
-  } finally {
-    // Close the page only if it was successfully opened
-    if (_page) {
-      await _page.close();
-      _page = null;
-    }
-    // Close the browser after capturing the screenshot or in case of an error
-    if (_browser) {
-      await _browser.close();
-      _browser = null;
-    }
+    console.error("Erro durante a captura de screenshot:", error);
+    res.status(500).end();
   }
 };
 
