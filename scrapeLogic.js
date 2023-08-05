@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer");
 require("dotenv").config();
 
 const targetURL = "https://www.bing.com/search?q=previs%C3%A3o+do+tempo+birigui";
-const divSelector = "body";
+const divSelector = "#wtr_cardContainer";
 
 const scrapeLogic = async (res) => {
   const browser = await puppeteer.launch({
