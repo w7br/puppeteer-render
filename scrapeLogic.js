@@ -21,7 +21,7 @@ const scrapeLogic = async (res) => {
     const browser = await puppeteer.launch();
 
     const page = await browser.newPage();
-    await page.goto(targetURL, { waitUntil: "networkidle0" });
+    await page.goto(targetURL, { waitUntil: "networkidle0", timeout: 30000 });
 
     await page.waitForSelector(divSelector);
 
