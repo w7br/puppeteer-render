@@ -15,36 +15,48 @@ const scrapeLogic = async (res) => {
         : puppeteer.executablePath(),
   });
   try {
-    const page = await browser.newPage();
+    await page.setExtraHTTPHeaders({
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    });
 
-    await page.goto("https://developer.chrome.com/");
+    await page.goto(URL_TO_CAPTURE, { waitUntil: 'networkidle0' });
 
-    // Set screen size
-    await page.setViewport({ width: 1080, height: 1024 });
+    if (await page.$('#bnp_btn_accept > a') !== null) {
+      await page.waitForSelector('#bnp_btn_accept > a');
+      await page.waitForTimeout(1000);
+      await page.click('#bnp_btn_accept > a', { delay: 1500 });
+    }
 
-    // Type into search box
-    await page.type(".search-box__input", "automate beyond recorder");
+    const elemento = await page.$(DIV_SELECTOR);
+    const elementoExistente = elemento !== null;
 
-    // Wait and click on first result
-    const searchResultSelector = ".search-box__link";
-    await page.waitForSelector(searchResultSelector);
-    await page.click(searchResultSelector);
+    console.log(">> >>> >>>> EXECUTING API <<<< <<< << ... ");
 
-    // Locate the full title with a unique string
-    const textSelector = await page.waitForSelector(
-      "text/Customize and automate"
-    );
-    const fullTitle = await textSelector.evaluate((el) => el.textContent);
+    if (elementoExistente) {
+      await page.waitForSelector(DIV_SELECTOR);
+      const element = await page.$(DIV_SELECTOR);
+      const screenshotBuffer = await element.screenshot({ encoding: 'binary' });
+      return screenshotBuffer;
+    }
 
-    // Print the full title
-    const logStatement = `The title of this blog post is ${fullTitle}`;
-    console.log(logStatement);
-    res.send(logStatement);
-  } catch (e) {
-    console.error(e);
-    res.send(`Something went wrong while running Puppeteer: ${e}`);
+    console.log(">> >>> >>>> ELEMENT NOT FOUND <<<< <<< << ...");
+    return null;
+
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
   } finally {
-    await browser.close();
+    // Close the page only if it was successfully opened
+    if (_page) {
+      await _page.close();
+      _page = null;
+    }
+    // Close the browser after capturing the screenshot or in case of an error
+    if (_browser) {
+      await _browser.close();
+      _browser = null;
+    }
   }
 };
 
