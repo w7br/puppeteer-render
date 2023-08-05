@@ -18,11 +18,7 @@ const scrapeLogic = async (res) => {
         : puppeteer.executablePath(),
   });
   try {
-    const browser = await puppeteer.launch({
-      executablePath: chromium.path,
-      args: chromium.args,
-      headless: chromium.headless,
-    });
+    const browser = await puppeteer.launch();
 
     const page = await browser.newPage();
     await page.goto(targetURL, { waitUntil: "networkidle0" });
