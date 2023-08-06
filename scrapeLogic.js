@@ -2,7 +2,7 @@ const puppeteer = require("puppeteer");
 require("dotenv").config();
 
 const targetURL = "https://www.bing.com/search?q=previs%C3%A3o+do+tempo+birigui";
-const divSelector = "#wtr_cardContainer";
+const divSelector = "body";
 
 const scrapeLogic = async (res) => {
   const browser = await puppeteer.launch({
@@ -44,6 +44,7 @@ const scrapeLogic = async (res) => {
 
     // Encerrar o navegador após a captura do screenshot
     await browser.close();
+    console.log(">>> >>> >> page << <<< <<<", page)
 
     // Enviar o screenshot como resposta
     res.setHeader("Content-Type", "image/png");
